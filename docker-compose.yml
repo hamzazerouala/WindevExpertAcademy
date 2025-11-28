@@ -36,7 +36,7 @@ services:
       - REDIS_URL=redis://redis:6379
       - PORT=3001
       - STORAGE_PATH=/app/storage
-      - ALLOWED_ORIGINS=http://localhost:3000
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS}
     depends_on:
       - db
       - redis
@@ -44,6 +44,11 @@ services:
       - ./backend:/app
       - /app/node_modules
       - video_storage:/app/storage
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-S", "--spider", "http://localhost:3001/api"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   frontend:
     build:
@@ -54,12 +59,17 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - NEXT_PUBLIC_API_URL=http://localhost:3001
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
     depends_on:
       - backend
     volumes:
       - ./frontend:/app
       - /app/node_modules
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-S", "--spider", "http://localhost:3000/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   worker:
     build:
