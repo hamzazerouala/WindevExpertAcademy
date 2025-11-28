@@ -32,7 +32,7 @@ services:
     ports:
       - "3001:3001"
     environment:
-      - DATABASE_URL=postgresql://windevexpert:windevexpert_password@db:5432/windevexpert_lms
+      - DATABASE_URL=${DATABASE_URL}
       - REDIS_URL=redis://redis:6379
       - PORT=3001
       - STORAGE_PATH=/app/storage
@@ -78,7 +78,7 @@ services:
     container_name: windevexpert_worker
     restart: always
     environment:
-      - DATABASE_URL=postgresql://windevexpert:windevexpert_password@db:5432/windevexpert_lms
+      - DATABASE_URL=${DATABASE_URL}
       - REDIS_URL=redis://redis:6379
     depends_on:
       - db
