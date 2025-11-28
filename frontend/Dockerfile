@@ -7,8 +7,8 @@ WORKDIR /app
 # Copy package.json and package-lock.json
 COPY package*.json ./
 
-# Install dependencies
-RUN npm ci --omit=dev
+# Install all dependencies (dev needed for build: Tailwind/PostCSS)
+RUN npm ci
 
 
 # Rebuild the source code only when needed
