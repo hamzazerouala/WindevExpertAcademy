@@ -6,7 +6,7 @@ import {
   Search, BookOpen, Menu, X,
   ChevronRight, ChevronLeft, LayoutGrid, Award,
   Mail, LockKeyhole, ArrowRight, Home, List, Phone,
-  Star, Filter, Monitor, Smartphone, Database, Code, Package, Layers
+  Star, Filter, Monitor, Smartphone, Database, Code, Package, Layers, Loader2
 } from 'lucide-react';
 
 const TRANSLATIONS = {
@@ -89,6 +89,8 @@ type AuthFormProps = {
 };
 
 function AuthForm({ type, isRTL, t, email, setEmail, password, setPassword, confirmPassword, setConfirmPassword, setView, API_URL }: AuthFormProps) {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [authError, setAuthError] = useState('');
   return (
     <div className="flex-1 flex items-center justify-center p-4 relative overflow-hidden">
       <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-blue-500/20 rounded-full blur-[100px] -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
@@ -108,19 +110,27 @@ function AuthForm({ type, isRTL, t, email, setEmail, password, setPassword, conf
                 <a href="#" className="text-sm text-blue-500 hover:text-blue-400 font-medium">{t.forgotPass}</a>
               </div>
             )}
-            <Button className="w-full mt-2" onClick={async () => {
+            <Button className={`w-full mt-2 ${isSubmitting ? 'opacity-70 cursor-not-allowed' : ''}`} disabled={isSubmitting} onClick={async () => {
               try {
+                setAuthError('');
+                setIsSubmitting(true);
                 if (type === 'login') {
                   const res = await axios.post(`${API_URL}/api/auth/login`, { email, password });
                   localStorage.setItem('token', res.data.access_token);
+                  axios.defaults.headers.common['Authorization'] = `Bearer ${res.data.access_token}`;
                   setView('catalog');
                 } else {
                   if (password !== confirmPassword) return;
                   await axios.post(`${API_URL}/api/auth/register`, { email, password, role: 'STUDENT' });
                   setView('login');
                 }
-              } catch (e) {}
-            }}>{type === 'login' ? t.signInBtn : t.signUpBtn}</Button>
+              } catch (e) {
+                setAuthError('Action impossible, vérifie les données.');
+              } finally {
+                setIsSubmitting(false);
+              }
+            }}>{isSubmitting ? <><Loader2 className="animate-spin" size={16} /> {type === 'login' ? t.signInBtn : t.signUpBtn}</> : (type === 'login' ? t.signInBtn : t.signUpBtn)}</Button>
+            {authError && <div className="text-red-500 text-sm mt-2">{authError}</div>}
           </div>
           <div className="mt-8 text-center">
             <p className="text-slate-500 text-sm">
@@ -144,6 +154,7 @@ export default function WindevExpertAcademy() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [courses, setCourses] = useState<any[]>(MOCK_COURSES);
+  const [isLoadingCourses, setIsLoadingCourses] = useState(false);
   const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
   const t = TRANSLATIONS[lang];
@@ -263,6 +274,15 @@ export default function WindevExpertAcademy() {
         </select>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {isLoadingCourses && Array.from({ length: 6 }).map((_, idx) => (
+          <div key={idx} className="rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 animate-pulse">
+            <div className="h-48 bg-slate-200 dark:bg-slate-800" />
+            <div className="p-5">
+              <div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-2/3 mb-2" />
+              <div className="h-3 bg-slate-200 dark:bg-slate-800 rounded w-1/3" />
+            </div>
+          </div>
+        ))}
         {filteredCourses.map(course => (
           <div key={course.id} onClick={() => setView('player')} className="group bg-white dark:bg-slate-900 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 hover:shadow-2xl hover:border-blue-500/30 transition-all duration-300 cursor-pointer flex flex-col h-full">
             <div className={`h-48 ${course.image} relative overflow-hidden`}>
@@ -369,9 +389,13 @@ export default function WindevExpertAcademy() {
   useEffect(() => {
     const load = async () => {
       try {
+        setIsLoadingCourses(true);
         const res = await axios.get(`${API_URL}/api/courses`);
         setCourses(res.data);
       } catch (e) {}
+      finally {
+        setIsLoadingCourses(false);
+      }
     };
     load();
   }, []);
