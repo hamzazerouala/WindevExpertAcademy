@@ -1,0 +1,84 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:16
+    container_name: windevexpert_db
+    restart: always
+    environment:
+      POSTGRES_DB: windevexpert_lms
+      POSTGRES_USER: windevexpert
+      POSTGRES_PASSWORD: windevexpert_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis:7-alpine
+    container_name: windevexpert_redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: windevexpert_backend
+    restart: always
+    ports:
+      - "3001:3001"
+    environment:
+      - DATABASE_URL=postgresql://windevexpert:windevexpert_password@db:5432/windevexpert_lms
+      - REDIS_URL=redis://redis:6379
+      - PORT=3001
+      - STORAGE_PATH=/app/storage
+      - ALLOWED_ORIGINS=http://localhost:3000
+    depends_on:
+      - db
+      - redis
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+      - video_storage:/app/storage
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: windevexpert_frontend
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:3001
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+
+  worker:
+    build:
+      context: ./worker
+      dockerfile: Dockerfile
+    container_name: windevexpert_worker
+    restart: always
+    environment:
+      - DATABASE_URL=postgresql://windevexpert:windevexpert_password@db:5432/windevexpert_lms
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - db
+      - redis
+    volumes:
+      - ./worker:/app
+      - /app/node_modules
+      - video_storage:/app/storage
+
+volumes:
+  postgres_data:
+  redis_data:
+  video_storage:

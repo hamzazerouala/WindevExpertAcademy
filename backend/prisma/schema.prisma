@@ -1,0 +1,228 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Enumerations pour gérer la complexité des états
+enum Role {
+  STUDENT
+  ADMIN
+}
+
+enum PaymentStatus {
+  PENDING_PAYMENT // En attente d'action utilisateur
+  PENDING_REVIEW  // (CCP) Reçu envoyé, en attente validation admin
+  COMPLETED       // Payé et accès donné
+  FAILED          // Échec paiement en ligne
+  REJECTED        // (CCP) Preuve refusée par admin
+  REFUNDED
+}
+
+enum PaymentProvider {
+  STRIPE
+  CHARGILY
+  CCP_OFFLINE
+}
+
+enum Currency {
+  EUR
+  DZD
+}
+
+// NOUVEAU : Type d'accès au cours
+enum CourseAccessType {
+  FREE          // Gratuit pour inscrits
+  SUBSCRIPTION  // Inclus dans l'abonnement
+  PREMIUM       // Achat unique obligatoire (Lifetime)
+}
+
+// NOUVEAU : Type de produit acheté
+enum ProductType {
+  COURSE_LIFETIME
+  SUBSCRIPTION_PERIOD // ex: 1 mois d'accès
+}
+
+enum LessonType {
+  VIDEO
+  TEXT
+  QUIZ
+}
+
+enum CouponType {
+  PERCENTAGE
+  FIXED_AMOUNT
+}
+
+model User {
+  id                String   @id @default(uuid())
+  email             String   @unique
+  password          String
+  country           String?  // Code ISO (ex: DZ, FR)
+  role              Role     @default(STUDENT)
+  
+  // Gestion Abonnement
+  subscriptionEndsAt DateTime? // Si date > now(), l'utilisateur a l'accès "SUBSCRIPTION"
+  
+  purchases         Purchase[]
+  progress          Progress[]
+  messages          Message[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Course {
+  id          String   @id @default(uuid())
+  title       Json     // {fr: "", en: "", ar: ""}
+  description Json
+  
+  // Configuration Accès
+  accessType  CourseAccessType @default(PREMIUM)
+  
+  priceEur    Decimal?  // Requis si PREMIUM
+  priceDzd    Decimal?  // Requis si PREMIUM
+  
+  thumbnail   String
+  published   Boolean  @default(false)
+  
+  sections    Section[]
+  purchases   Purchase[] // Achats "Lifetime" de ce cours
+  coupons     Coupon[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Modèle pour définir les plans d'abonnement (ex: Mensuel, Annuel)
+model SubscriptionPlan {
+  id          String   @id @default(uuid())
+  name        Json     // "Mensuel", "Annuel"
+  durationDays Int     // 30, 365
+  priceEur    Decimal
+  priceDzd    Decimal
+  isActive    Boolean  @default(true)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Section {
+  id       String    @id @default(uuid())
+  title    Json
+  courseId String
+  course   Course    @relation(fields: [courseId], references: [id])
+  lessons  Lesson[]
+  order    Int
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Lesson {
+  id        String   @id @default(uuid())
+  title     Json
+  type      LessonType 
+  videoUrl  String?
+  duration  Int
+  isFree    Boolean  @default(false) // Preview gratuite possible même sur cours payant
+  sectionId String
+  section   Section  @relation(fields: [sectionId], references: [id])
+  messages  Message[]
+  progress  Progress[]
+  
+  videoKey  VideoKey?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Coupon {
+  id        String   @id @default(uuid())
+  code      String   @unique
+  discount  Decimal
+  type      CouponType 
+  expiresAt DateTime?
+  maxUses   Int?
+  usedCount Int      @default(0)
+  
+  // Peut s'appliquer à un cours spécifique OU à un plan d'abonnement
+  courseId  String?
+  course    Course?  @relation(fields: [courseId], references: [id])
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Purchase {
+  id             String          @id @default(uuid())
+  userId         String
+  user           User            @relation(fields: [userId], references: [id])
+  
+  // Polymorphisme de l'achat : Soit un cours, soit un temps d'abonnement
+  productType    ProductType
+  
+  courseId       String?         // Rempli si ProductType == COURSE_LIFETIME
+  course         Course?         @relation(fields: [courseId], references: [id])
+  
+  subscriptionDurationDays Int?  // Rempli si ProductType == SUBSCRIPTION_PERIOD
+  
+  amount         Decimal         
+  currency       Currency        @default(EUR)
+  
+  provider       PaymentProvider 
+  status         PaymentStatus   @default(PENDING_PAYMENT)
+  
+  transactionId  String?         
+  receiptUrl     String?         
+  rejectionReason String?        
+  
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+}
+
+model Message {
+  id        String   @id @default(uuid())
+  content   String
+  createdAt DateTime @default(now())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  lessonId  String
+  lesson    Lesson   @relation(fields: [lessonId], references: [id])
+  parentId  String?
+  timecode  Int?
+  
+  parent    Message? @relation("MessageReplies", fields: [parentId], references: [id])
+  replies   Message[] @relation("MessageReplies")
+}
+
+model Progress {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  lessonId  String
+  lesson    Lesson   @relation(fields: [lessonId], references: [id])
+  completed Boolean  @default(false)
+  position  Int?     // Position in seconds for video lessons
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@unique([userId, lessonId])
+}
+
+model VideoKey {
+  id       String   @id @default(uuid())
+  lessonId String   @unique
+  lesson   Lesson   @relation(fields: [lessonId], references: [id])
+  key      String   // Base64 encoded encryption key
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

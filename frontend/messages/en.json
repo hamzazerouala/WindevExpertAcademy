@@ -1,0 +1,31 @@
+{
+  "Navigation": {
+    "home": "Home",
+    "courses": "Courses",
+    "myCourses": "My Courses",
+    "subscription": "Subscription",
+    "admin": "Administration"
+  },
+  "Auth": {
+    "login": "Login",
+    "logout": "Logout",
+    "email": "Email",
+    "password": "Password",
+    "signin": "Sign In",
+    "signup": "Sign Up"
+  },
+  "Course": {
+    "free": "FREE",
+    "subscription": "INCLUDED IN SUBSCRIPTION",
+    "premium": "PREMIUM",
+    "preview": "Free Preview",
+    "buy": "Buy this course (Lifetime Access)",
+    "subscribe": "Subscribe to access"
+  },
+  "Subscription": {
+    "title": "Subscription",
+    "monthly": "Monthly",
+    "yearly": "Yearly",
+    "renew": "Renew"
+  }
+}

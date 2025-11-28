@@ -1,0 +1,31 @@
+{
+  "Navigation": {
+    "home": "الرئيسية",
+    "courses": "الدورات",
+    "myCourses": "دوراتي",
+    "subscription": "الاشتراك",
+    "admin": "الإدارة"
+  },
+  "Auth": {
+    "login": "تسجيل الدخول",
+    "logout": "تسجيل الخروج",
+    "email": "البريد الإلكتروني",
+    "password": "كلمة المرور",
+    "signin": "تسجيل الدخول",
+    "signup": "إنشاء حساب"
+  },
+  "Course": {
+    "free": "مجاناً",
+    "subscription": "مشمول في الاشتراك",
+    "premium": "متميز",
+    "preview": "معاينة مجانية",
+    "buy": "شراء هذه الدورة (وصول مدى الحياة)",
+    "subscribe": "اشترك للوصول"
+  },
+  "Subscription": {
+    "title": "الاشتراك",
+    "monthly": "شهري",
+    "yearly": "سنوي",
+    "renew": "تجديد"
+  }
+}

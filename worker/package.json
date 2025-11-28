@@ -1,0 +1,19 @@
+{
+  "name": "windevexpert-worker",
+  "version": "1.0.0",
+  "description": "Video processing worker for WindevExpert Academy",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.0.0",
+    "bullmq": "^4.0.0",
+    "fluent-ffmpeg": "^2.1.2",
+    "redis": "^4.6.7"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "Navigation": {
+    "home": "Accueil",
+    "courses": "Formations",
+    "myCourses": "Mes Cours",
+    "subscription": "Abonnement",
+    "admin": "Administration"
+  },
+  "Auth": {
+    "login": "Connexion",
+    "logout": "Déconnexion",
+    "email": "Email",
+    "password": "Mot de passe",
+    "signin": "Se connecter",
+    "signup": "S'inscrire"
+  },
+  "Course": {
+    "free": "GRATUIT",
+    "subscription": "INCLUS ABONNEMENT",
+    "premium": "PREMIUM",
+    "preview": "Aperçu gratuit",
+    "buy": "Acheter ce cours (Accès à vie)",
+    "subscribe": "S'abonner pour accéder"
+  },
+  "Subscription": {
+    "title": "Abonnement",
+    "monthly": "Mensuel",
+    "yearly": "Annuel",
+    "renew": "Renouveler"
+  }
+}
