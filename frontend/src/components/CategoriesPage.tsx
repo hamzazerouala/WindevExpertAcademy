@@ -7,7 +7,7 @@ import { Monitor, Globe, Smartphone, Database, Code, Package } from 'lucide-reac
 interface Category {
   id: string;
   label: string;
-  icon: React.ComponentType<{ size?: number }>;
+  icon: React.ComponentType<{ size?: number; className?: string }>;
   color: string;
 }
 
