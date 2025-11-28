@@ -74,6 +74,66 @@ const RatingStars = ({ rating }: any) => (
   </div>
 );
 
+type AuthFormProps = {
+  type: 'login' | 'register';
+  isRTL: boolean;
+  t: any;
+  email: string;
+  setEmail: (v: string) => void;
+  password: string;
+  setPassword: (v: string) => void;
+  confirmPassword: string;
+  setConfirmPassword: (v: string) => void;
+  setView: (v: any) => void;
+  API_URL: string;
+};
+
+function AuthForm({ type, isRTL, t, email, setEmail, password, setPassword, confirmPassword, setConfirmPassword, setView, API_URL }: AuthFormProps) {
+  return (
+    <div className="flex-1 flex items-center justify-center p-4 relative overflow-hidden">
+      <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-blue-500/20 rounded-full blur-[100px] -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
+      <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-yellow-500/10 rounded-full blur-[100px] translate-x-1/2 translate-y-1/2 pointer-events-none" />
+      <div className="w-full max-w-md z-10">
+        <div className="bg-white dark:bg-slate-900 p-8 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800">
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold mb-2 bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-400">{type === 'login' ? t.welcomeBack : t.joinUs}</h1>
+            <p className="text-slate-500 dark:text-slate-400">{type === 'login' ? t.welcomeSub : t.joinSub}</p>
+          </div>
+          <div className="space-y-4">
+            <InputField icon={Mail} type="email" placeholder={t.email} isRTL={isRTL} value={email} onChange={(e: any) => setEmail(e.target.value)} />
+            <InputField icon={LockKeyhole} type="password" placeholder={t.password} isRTL={isRTL} value={password} onChange={(e: any) => setPassword(e.target.value)} />
+            {type === 'register' && <InputField icon={LockKeyhole} type="password" placeholder={t.confirmPassword} isRTL={isRTL} value={confirmPassword} onChange={(e: any) => setConfirmPassword(e.target.value)} />}
+            {type === 'login' && (
+              <div className={`flex justify-end ${isRTL ? 'flex-row-reverse' : ''}`}>
+                <a href="#" className="text-sm text-blue-500 hover:text-blue-400 font-medium">{t.forgotPass}</a>
+              </div>
+            )}
+            <Button className="w-full mt-2" onClick={async () => {
+              try {
+                if (type === 'login') {
+                  const res = await axios.post(`${API_URL}/api/auth/login`, { email, password });
+                  localStorage.setItem('token', res.data.access_token);
+                  setView('catalog');
+                } else {
+                  if (password !== confirmPassword) return;
+                  await axios.post(`${API_URL}/api/auth/register`, { email, password, role: 'STUDENT' });
+                  setView('login');
+                }
+              } catch (e) {}
+            }}>{type === 'login' ? t.signInBtn : t.signUpBtn}</Button>
+          </div>
+          <div className="mt-8 text-center">
+            <p className="text-slate-500 text-sm">
+              {type === 'login' ? t.noAccount : t.hasAccount} {' '}
+              <button onClick={() => setView(type === 'login' ? 'register' : 'login')} className="text-yellow-600 dark:text-yellow-500 font-bold hover:underline">{type === 'login' ? t.register : t.login}</button>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function WindevExpertAcademy() {
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
   const [lang, setLang] = useState<'fr' | 'en' | 'ar'>('fr');
@@ -171,49 +231,6 @@ export default function WindevExpertAcademy() {
     </div>
   );
 
-  const AuthPage = ({ type }: any) => (
-    <div className="flex-1 flex items-center justify-center p-4 relative overflow-hidden">
-      <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-blue-500/20 rounded-full blur-[100px] -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
-      <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-yellow-500/10 rounded-full blur-[100px] translate-x-1/2 translate-y-1/2 pointer-events-none" />
-      <div className="w-full max-w-md z-10">
-        <div className="bg-white dark:bg-slate-900 p-8 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800">
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold mb-2 bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-400">{type === 'login' ? t.welcomeBack : t.joinUs}</h1>
-            <p className="text-slate-500 dark:text-slate-400">{type === 'login' ? t.welcomeSub : t.joinSub}</p>
-          </div>
-          <div className="space-y-4">
-            <InputField icon={Mail} type="email" placeholder={t.email} isRTL={isRTL} value={email} onChange={(e: any) => setEmail(e.target.value)} />
-            <InputField icon={LockKeyhole} type="password" placeholder={t.password} isRTL={isRTL} value={password} onChange={(e: any) => setPassword(e.target.value)} />
-            {type === 'register' && <InputField icon={LockKeyhole} type="password" placeholder={t.confirmPassword} isRTL={isRTL} value={confirmPassword} onChange={(e: any) => setConfirmPassword(e.target.value)} />}
-            {type === 'login' && (
-              <div className={`flex justify-end ${isRTL ? 'flex-row-reverse' : ''}`}>
-                <a href="#" className="text-sm text-blue-500 hover:text-blue-400 font-medium">{t.forgotPass}</a>
-              </div>
-            )}
-            <Button className="w-full mt-2" onClick={async () => {
-              try {
-                if (type === 'login') {
-                  const res = await axios.post(`${API_URL}/api/auth/login`, { email, password });
-                  localStorage.setItem('token', res.data.access_token);
-                  setView('catalog');
-                } else {
-                  if (password !== confirmPassword) return;
-                  await axios.post(`${API_URL}/api/auth/register`, { email, password, role: 'STUDENT' });
-                  setView('login');
-                }
-              } catch (e) {}
-            }}>{type === 'login' ? t.signInBtn : t.signUpBtn}</Button>
-          </div>
-          <div className="mt-8 text-center">
-            <p className="text-slate-500 text-sm">
-              {type === 'login' ? t.noAccount : t.hasAccount} {' '}
-              <button onClick={() => setView(type === 'login' ? 'register' : 'login')} className="text-yellow-600 dark:text-yellow-500 font-bold hover:underline">{type === 'login' ? t.register : t.login}</button>
-            </p>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
 
   const CatalogPage = () => (
     <div className="max-w-7xl mx-auto px-4 py-12">
@@ -364,8 +381,12 @@ export default function WindevExpertAcademy() {
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap'); .font-cairo { font-family: 'Cairo', sans-serif; }`}</style>
       <Navbar />
       <main className="flex-1 flex flex-col">
-        {view === 'login' && <AuthPage type="login" />}
-        {view === 'register' && <AuthPage type="register" />}
+        {view === 'login' && (
+          <AuthForm type="login" isRTL={isRTL} t={t} email={email} setEmail={setEmail} password={password} setPassword={setPassword} confirmPassword={confirmPassword} setConfirmPassword={setConfirmPassword} setView={setView} API_URL={API_URL} />
+        )}
+        {view === 'register' && (
+          <AuthForm type="register" isRTL={isRTL} t={t} email={email} setEmail={setEmail} password={password} setPassword={setPassword} confirmPassword={confirmPassword} setConfirmPassword={setConfirmPassword} setView={setView} API_URL={API_URL} />
+        )}
         {view === 'catalog' && <CatalogPage />}
         {view === 'categories' && <CategoriesPage />}
         {view === 'player' && <PlayerPage />}
