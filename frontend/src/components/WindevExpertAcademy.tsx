@@ -1,5 +1,6 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import {
   Moon, Sun, Globe, Play, Lock, CheckCircle,
   Search, BookOpen, Menu, X,
@@ -45,7 +46,7 @@ const Button = ({ children, variant = 'primary', className = '', ...props }: any
   );
 };
 
-const InputField = ({ icon: Icon, type, placeholder, isRTL }: any) => (
+const InputField = ({ icon: Icon, type, placeholder, isRTL, value, onChange }: any) => (
   <div className="relative group">
     <div className={`absolute inset-y-0 flex items-center pointer-events-none text-slate-400 group-focus-within:text-blue-500 transition-colors ${isRTL ? 'right-0 pr-4' : 'left-0 pl-4'}`}>
       <Icon size={20} />
@@ -55,6 +56,8 @@ const InputField = ({ icon: Icon, type, placeholder, isRTL }: any) => (
       className={`w-full py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all text-slate-900 dark:text-white placeholder-slate-400 ${isRTL ? 'pr-12 pl-4 text-right' : 'pl-12 pr-4 text-left'}`}
       placeholder={placeholder}
       dir={isRTL ? 'rtl' : 'ltr'}
+      value={value}
+      onChange={onChange}
     />
   </div>
 );
@@ -77,6 +80,11 @@ export default function WindevExpertAcademy() {
   const [view, setView] = useState<'login' | 'register' | 'catalog' | 'categories' | 'player'>('login');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [filters, setFilters] = useState({ category: 'ALL', level: 'ALL', price: 'ALL' });
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [courses, setCourses] = useState<any[]>(MOCK_COURSES);
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
   const t = TRANSLATIONS[lang];
   const isRTL = lang === 'ar';
@@ -86,7 +94,7 @@ export default function WindevExpertAcademy() {
     setView('catalog');
   };
 
-  const filteredCourses = MOCK_COURSES.filter(course => {
+  const filteredCourses = (courses && courses.length ? courses : MOCK_COURSES).filter((course: any) => {
     const matchCat = filters.category === 'ALL' || course.category === filters.category;
     const matchLevel = filters.level === 'ALL' || course.level === filters.level;
     const matchPrice = filters.price === 'ALL' || (filters.price === 'FREE' && course.price === 'FREE') || (filters.price === 'PREMIUM' && course.price === 'PREMIUM');
@@ -174,15 +182,27 @@ export default function WindevExpertAcademy() {
             <p className="text-slate-500 dark:text-slate-400">{type === 'login' ? t.welcomeSub : t.joinSub}</p>
           </div>
           <div className="space-y-4">
-            <InputField icon={Mail} type="email" placeholder={t.email} isRTL={isRTL} />
-            <InputField icon={LockKeyhole} type="password" placeholder={t.password} isRTL={isRTL} />
-            {type === 'register' && <InputField icon={LockKeyhole} type="password" placeholder={t.confirmPassword} isRTL={isRTL} />}
+            <InputField icon={Mail} type="email" placeholder={t.email} isRTL={isRTL} value={email} onChange={(e: any) => setEmail(e.target.value)} />
+            <InputField icon={LockKeyhole} type="password" placeholder={t.password} isRTL={isRTL} value={password} onChange={(e: any) => setPassword(e.target.value)} />
+            {type === 'register' && <InputField icon={LockKeyhole} type="password" placeholder={t.confirmPassword} isRTL={isRTL} value={confirmPassword} onChange={(e: any) => setConfirmPassword(e.target.value)} />}
             {type === 'login' && (
               <div className={`flex justify-end ${isRTL ? 'flex-row-reverse' : ''}`}>
                 <a href="#" className="text-sm text-blue-500 hover:text-blue-400 font-medium">{t.forgotPass}</a>
               </div>
             )}
-            <Button className="w-full mt-2" onClick={() => setView('catalog')}>{type === 'login' ? t.signInBtn : t.signUpBtn}</Button>
+            <Button className="w-full mt-2" onClick={async () => {
+              try {
+                if (type === 'login') {
+                  const res = await axios.post(`${API_URL}/api/auth/login`, { email, password });
+                  localStorage.setItem('token', res.data.access_token);
+                  setView('catalog');
+                } else {
+                  if (password !== confirmPassword) return;
+                  await axios.post(`${API_URL}/api/auth/register`, { email, password, role: 'STUDENT' });
+                  setView('login');
+                }
+              } catch (e) {}
+            }}>{type === 'login' ? t.signInBtn : t.signUpBtn}</Button>
           </div>
           <div className="mt-8 text-center">
             <p className="text-slate-500 text-sm">
@@ -344,4 +364,12 @@ export default function WindevExpertAcademy() {
     </div>
   );
 }
-
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const res = await axios.get(`${API_URL}/api/courses`);
+        setCourses(res.data);
+      } catch (e) {}
+    };
+    load();
+  }, []);

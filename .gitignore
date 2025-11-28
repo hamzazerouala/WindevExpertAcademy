@@ -12,18 +12,6 @@ dist
 dist-ssr
 *.local
 
-# Environment files
-backend/.env
-frontend/.env
-worker/.env
-
-# Runtime storage and uploads
-backend/uploads/
-backend/storage/
-
-# IDE artifacts
-.trae/
-
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

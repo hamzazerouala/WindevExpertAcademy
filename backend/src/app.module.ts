@@ -11,6 +11,7 @@ import { CoursesModule } from './courses/courses.module';
 import { PaymentsModule } from './payments/payments.module';
 import { ChatModule } from './chat/chat.module';
 import { PrismaService } from './prisma/prisma.service';
+import { HealthModule } from './health/health.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { PrismaService } from './prisma/prisma.service';
     CoursesModule,
     PaymentsModule,
     ChatModule,
+    HealthModule,
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService],
