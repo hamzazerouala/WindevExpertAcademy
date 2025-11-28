@@ -349,6 +349,15 @@ export default function WindevExpertAcademy() {
       </div>
     </div>
   );
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const res = await axios.get(`${API_URL}/api/courses`);
+        setCourses(res.data);
+      } catch (e) {}
+    };
+    load();
+  }, []);
 
   return (
     <div className={appWrapperClass} dir={isRTL ? 'rtl' : 'ltr'}>
@@ -364,12 +373,3 @@ export default function WindevExpertAcademy() {
     </div>
   );
 }
-  useEffect(() => {
-    const load = async () => {
-      try {
-        const res = await axios.get(`${API_URL}/api/courses`);
-        setCourses(res.data);
-      } catch (e) {}
-    };
-    load();
-  }, []);
