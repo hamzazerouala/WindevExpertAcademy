@@ -1,5 +1,4 @@
-# Use Node.js 18 alpine as base image
-FROM node:18-alpine
+FROM node:20-alpine
 
 # Set working directory
 WORKDIR /app
@@ -7,8 +6,8 @@ WORKDIR /app
 # Copy package.json and package-lock.json
 COPY package*.json ./
 
-# Install dependencies
-RUN npm ci --only=production
+# Install dependencies (include dev for Prisma generate and build)
+RUN npm ci --legacy-peer-deps
 
 # Copy prisma schema
 COPY prisma ./prisma/
@@ -16,8 +15,10 @@ COPY prisma ./prisma/
 # Generate Prisma client
 RUN npx prisma generate
 
-# Copy source code
 COPY . .
+
+# Build application
+RUN npm run build
 
 # Expose port
 EXPOSE 3001
