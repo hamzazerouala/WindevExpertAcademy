@@ -1,8 +1,8 @@
-# Use Node.js 20 alpine as base image
-FROM node:20-alpine
+# Use Node.js 20 Debian-based image to satisfy Prisma OpenSSL requirements
+FROM node:20-bullseye-slim
 
-# Install FFmpeg
-RUN apk add --no-cache ffmpeg
+# Install FFmpeg and OpenSSL
+RUN apt-get update && apt-get install -y ffmpeg openssl && rm -rf /var/lib/apt/lists/*
 
 # Set working directory
 WORKDIR /app
@@ -10,8 +10,15 @@ WORKDIR /app
 # Copy package.json and package-lock.json
 COPY package*.json ./
 
-# Install dependencies with fallback if no lockfile is present
-RUN if [ -f package-lock.json ]; then npm ci --omit=dev; else npm install --omit=dev --legacy-peer-deps; fi
+# Install dependencies
+RUN npm install --legacy-peer-deps
+
+# Copy Prisma schema and generate client
+COPY prisma ./prisma/
+RUN npx prisma generate
+
+# Remove dev dependencies for production runtime
+RUN npm prune --omit=dev
 
 # Copy source code
 COPY . .
