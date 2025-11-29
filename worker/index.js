@@ -21,10 +21,15 @@ const worker = new Worker('videoTranscoding', async job => {
       }
     });
     
-    // Define output directory
-    const outputDir = path.join(__dirname, 'storage', videoId);
+    // Define output directory (use shared volume path if provided)
+    const baseStorage = process.env.STORAGE_PATH || path.join(__dirname, 'storage');
+    const outputDir = path.join(baseStorage, videoId);
     if (!fs.existsSync(outputDir)) {
       fs.mkdirSync(outputDir, { recursive: true });
+    }
+    const segmentsDir = path.join(outputDir, 'segments');
+    if (!fs.existsSync(segmentsDir)) {
+      fs.mkdirSync(segmentsDir, { recursive: true });
     }
     
     // Generate encryption key
@@ -34,7 +39,7 @@ const worker = new Worker('videoTranscoding', async job => {
     
     // Create key info file for FFmpeg
     const keyInfoPath = path.join(outputDir, 'key_info.txt');
-    const keyInfoContent = `https://api.windevexpert.com/api/videos/key/${videoId}\n${keyFilePath}`;
+    const keyInfoContent = `https://api.windevexpert.online/api/videos/key/${videoId}\n${keyFilePath}`;
     fs.writeFileSync(keyInfoPath, keyInfoContent);
     
     // Define output paths
@@ -48,7 +53,7 @@ const worker = new Worker('videoTranscoding', async job => {
           '-hls_time', '10',
           '-hls_playlist_type', 'event',
           '-hls_key_info_file', keyInfoPath,
-          '-hls_segment_filename', path.join(outputDir, 'segment_%03d.ts'),
+          '-hls_segment_filename', path.join(segmentsDir, 'segment_%03d.ts'),
           '-master_pl_name', 'master.m3u8',
           '-hls_base_url', `segments/`
         ])
