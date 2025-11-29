@@ -8,7 +8,14 @@ export class HealthController {
 
   @Get()
   async status() {
-    const dbOk = await this.prisma.$queryRaw`SELECT 1`;
+    let dbOk = false;
+    try {
+      if (this.prisma.isConnected && this.prisma.isConnected()) {
+        // simple check
+        await this.prisma.$queryRaw`SELECT 1`;
+        dbOk = true;
+      }
+    } catch {}
     let redisOk = false;
     try {
       const client = createClient({ url: process.env.REDIS_URL });
@@ -22,4 +29,3 @@ export class HealthController {
     return { ok: true, db: !!dbOk, redis: redisOk };
   }
 }
-
