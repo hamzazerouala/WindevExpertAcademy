@@ -109,9 +109,15 @@ const worker = new Worker('videoTranscoding', async job => {
   connection: (() => {
     try {
       const url = new URL(process.env.REDIS_URL || 'redis://localhost:6379');
-      return { host: url.hostname, port: Number(url.port) || 6379 };
+      const conn = { host: url.hostname, port: Number(url.port) || 6379 };
+      if (url.username) conn.username = url.username;
+      if (url.password) conn.password = url.password;
+      return conn;
     } catch {
-      return { host: process.env.REDIS_HOST || 'localhost', port: Number(process.env.REDIS_PORT) || 6379 };
+      const conn = { host: process.env.REDIS_HOST || 'localhost', port: Number(process.env.REDIS_PORT) || 6379 };
+      if (process.env.REDIS_USERNAME) conn.username = process.env.REDIS_USERNAME;
+      if (process.env.REDIS_PASSWORD) conn.password = process.env.REDIS_PASSWORD;
+      return conn;
     }
   })()
 });
