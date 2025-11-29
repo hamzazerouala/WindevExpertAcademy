@@ -6,8 +6,8 @@ WORKDIR /app
 # Copy package.json and package-lock.json
 COPY package*.json ./
 
-# Install dependencies (include dev for Prisma generate and build)
-RUN npm ci --legacy-peer-deps
+# Install dependencies (tolerate lock mismatch)
+RUN npm install --legacy-peer-deps
 
 # Copy prisma schema
 COPY prisma ./prisma/
