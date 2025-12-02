@@ -391,7 +391,33 @@ export default function WindevExpertAcademy() {
       try {
         setIsLoadingCourses(true);
         const res = await axios.get(`${API_URL}/api/courses`);
-        setCourses(res.data);
+        const normalize = (c: any) => {
+          const title = typeof c?.title === 'object' && c.title !== null
+            ? c.title
+            : { fr: String(c?.title ?? ''), en: String(c?.title ?? ''), ar: String(c?.title ?? '') };
+          const author = typeof c?.author === 'object' && c.author !== null
+            ? c.author
+            : { fr: 'WindevExpert', en: 'WindevExpert', ar: 'وينديف إكسبرت' };
+          const sections = Array.isArray(c?.sections) ? c.sections : [];
+          const lessonsCount = sections.reduce((sum: number, s: any) => sum + (Array.isArray(s?.lessons) ? s.lessons.length : 0), 0);
+          return {
+            id: c?.id ?? Math.random(),
+            title,
+            author,
+            price: c?.accessType === 'FREE' ? 'FREE' : 'PREMIUM',
+            duration: String(c?.duration ?? 0),
+            lessonsCount,
+            image: 'bg-gradient-to-br from-blue-600 to-indigo-900',
+            progress: 0,
+            level: 'beginner',
+            version: '25+',
+            rating: 4.8,
+            reviewsCount: 0,
+            category: 'WINDEV',
+          };
+        };
+        const data = Array.isArray(res.data) ? res.data.map(normalize) : [];
+        setCourses(data);
       } catch (e) {}
       finally {
         setIsLoadingCourses(false);
