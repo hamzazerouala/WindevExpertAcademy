@@ -17,15 +17,17 @@ export class HealthController {
       }
     } catch {}
     let redisOk = false;
+    let redisError: string | undefined;
     try {
       const client = createClient({ url: process.env.REDIS_URL });
       await client.connect();
       const pong = await client.ping();
       redisOk = pong === 'PONG';
       await client.disconnect();
-    } catch {
+    } catch (err: any) {
       redisOk = false;
+      redisError = err?.message;
     }
-    return { ok: true, db: !!dbOk, redis: redisOk };
+    return { ok: true, db: !!dbOk, redis: redisOk, redisError };
   }
 }
