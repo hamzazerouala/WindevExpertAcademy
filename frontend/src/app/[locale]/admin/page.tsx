@@ -1,6 +1,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import { useParams, useRouter } from "next/navigation";
 
 type Locale = "fr" | "en" | "ar";
 
@@ -22,8 +23,10 @@ function parseJwt(token: string) {
   }
 }
 
-export default function AdminPage({ params }: { params: { locale: Locale } }) {
-  const locale = params.locale;
+export default function AdminPage() {
+  const router = useRouter();
+  const params = useParams() as { locale?: string };
+  const locale = (params?.locale === "fr" || params?.locale === "en" || params?.locale === "ar") ? (params?.locale as Locale) : "fr";
   const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
   const [authorized, setAuthorized] = useState(false);
   const [courses, setCourses] = useState<any[]>([]);
@@ -50,9 +53,9 @@ export default function AdminPage({ params }: { params: { locale: Locale } }) {
       loadCourses();
     } else {
       setAuthorized(false);
-      window.location.href = `/${locale}`;
+      router.replace(`/${locale}`);
     }
-  }, [locale]);
+  }, [locale, router]);
 
   const loadCourses = async () => {
     try {
@@ -156,4 +159,3 @@ export default function AdminPage({ params }: { params: { locale: Locale } }) {
     </div>
   );
 }
-
