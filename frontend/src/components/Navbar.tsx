@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import axios from 'axios';
 import { useTranslations } from 'next-intl';
 import { Button } from './UIComponents';
 import { Moon, Sun, Menu, X, Home, List, Phone } from 'lucide-react';
@@ -86,7 +87,18 @@ export const Navbar: React.FC<NavbarProps> = ({
             {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
           </button>
           {view !== 'login' && view !== 'register' && (
-            <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 ml-4 border-2 border-white dark:border-slate-800 cursor-pointer shadow-md" />
+            <button
+              onClick={() => {
+                try {
+                  localStorage.removeItem('token');
+                  delete axios.defaults.headers.common['Authorization'];
+                } catch {}
+                setView('login');
+              }}
+              className="ml-4 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 text-sm"
+            >
+              Déconnexion
+            </button>
           )}
         </div>
 
